@@ -1,0 +1,14 @@
+ftfy 
+bs4 
+selenium 
+fastapi[standard]
+uvicorn 
+
+python-multipart
+python-docx
+PyPDF2
+PyMuPDF
+unidecode
+debugpy
+ fitz
+ ftfy
