@@ -2,7 +2,7 @@ import os
 import shutil
 import logging
 from fastapi import FastAPI, UploadFile, HTTPException, File, Response
-from fastapi.responses import FileResponse
+from fastapi.responses import JSONResponse,  FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 from starlette.background import BackgroundTask
@@ -29,17 +29,17 @@ async def hello():
 
 
 @app.post("/reduire")
-async def optimise_images(html_file: UploadFile, del_jpeg: int = 0):
+async def optimise_images(file: UploadFile, del_jpeg: int = 0):
     try:
-        if not html_file:
+        if not file:
             raise HTTPException(status_code=400, detail="Erreur : Veuillez choisir un fichier HTML")
         
         tmpdir = "tmp"
         os.makedirs(tmpdir, exist_ok=True)  # Ensure tmp directory exists
 
-        file_path_html = Path(tmpdir) / html_file.filename
+        file_path_html = Path(tmpdir) / file.filename
         with file_path_html.open("wb") as file:
-            file.write(await html_file.read())
+            file.write(await file.read())
 
         # Debugging: Check if the file actually exists
         if not file_path_html.exists():
@@ -74,31 +74,43 @@ async def optimise_images(html_file: UploadFile, del_jpeg: int = 0):
 UPLOAD_DIR = "tmp"
 os.makedirs(UPLOAD_DIR, exist_ok=True)  
 
+
 @app.post("/fix-alt")
 async def fix_alt(file: UploadFile = File(...)):
     print(f"Received file: {file.filename}")
     file_path = f"{UPLOAD_DIR}/{file.filename}"
-    
+    processed_file_path = f"{UPLOAD_DIR}/{file.filename}"
+
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     print("File saved successfully~")
-    
+
     with open(file_path, "r", encoding="utf-8") as f:
         html_content = f.read()
-    
+
     img_pattern = re.compile(r'(<img\s+[^>]*?src="[^"]+")(?!\s+alt="image")', re.IGNORECASE)
     count = 0
-    
+
     def add_alt(match):
         nonlocal count
         count += 1
         return f'{match.group(1)} alt="image"'
-    
+
     updated_content = img_pattern.sub(add_alt, html_content)
     print(f"Number of alt attributes added: {count}")
-    
-    with open(file_path, "w", encoding="utf-8") as f:
+
+    with open(processed_file_path, "w", encoding="utf-8") as f:
         f.write(updated_content)
     print("Updated file saved")
-    
-    return Response(content=updated_content, media_type=file.content_type)
+
+    download_url = f"/download/{file.filename}"
+    print(f"Download link generated: {download_url}")
+
+    return JSONResponse(content={"processed": updated_content, "download_url": download_url})
+
+
+@app.get("/download/{filename}")
+async def download_file(filename: str):
+    processed_file_path = f"{UPLOAD_DIR}/{filename}"
+    print(f"Serving file: {processed_file_path}")
+    return FileResponse(processed_file_path, filename=f"{filename}", media_type="text/html")
