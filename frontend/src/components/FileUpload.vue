@@ -2,13 +2,17 @@
   <div class="upload-container" @dragover.prevent @drop="handleDrop">
     <input type="file" id="file-upload" @change="handleFileChange" hidden />
     <label for="file-upload" class="upload-box">
-      <div v-if="!selectedFile" >
+      <div v-if="!selectedFile">
         <i class="bi bi-cloud-upload upload-icon"></i>
         <p>Aucun fichier n'a encore été choisi!</p>
       </div>
       <p v-else class="selected-file">{{ selectedFile.name }}</p>
     </label>
-    <button @click="uploadFile" :disabled="!selectedFile">Envoyer</button>
+
+    <button @click="uploadFile" :disabled="!selectedFile || isLoading">
+      <span v-if="!isLoading">Envoyer</span>
+      <span v-else class="loader"></span>
+    </button>
   </div>
 </template>
 
@@ -18,6 +22,7 @@ import { useRoute } from 'vue-router';
 import axios from 'axios';
 
 const selectedFile = ref(null);
+const isLoading = ref(false);
 const route = useRoute();
 
 const apiEndpoint = computed(() => {
@@ -40,28 +45,34 @@ const handleDrop = (event) => {
 const uploadFile = async () => {
   if (!selectedFile.value) return;
 
-  const formData = new FormData();
-  formData.append("file", selectedFile.value);
-  console.log("Uploading:", selectedFile.value);
+  isLoading.value = true; // Show loader
 
-  try {
-    const response = await axios.post(`http://localhost:8998${apiEndpoint.value}`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+  setTimeout(async () => {
+    const formData = new FormData();
+    formData.append("file", selectedFile.value);
+    console.log("Uploading:", selectedFile.value);
 
-    console.log("File uploaded successfully:", response.data);
+    try {
+      const response = await axios.post(`http://localhost:8998${apiEndpoint.value}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-    if (response.data.download_url) {
-      const downloadLink = document.createElement("a");
-      downloadLink.href = `http://localhost:8998${response.data.download_url}`;
-      downloadLink.setAttribute("download", "");
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
+      console.log("File uploaded successfully:", response.data);
+
+      if (response.data.download_url) {
+        const downloadLink = document.createElement("a");
+        downloadLink.href = `http://localhost:8998${response.data.download_url}`;
+        downloadLink.setAttribute("download", "");
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      }
+    } catch (error) {
+      console.error("File upload failed:", error);
+    } finally {
+      isLoading.value = false; // Hide loader after 10 seconds
     }
-  } catch (error) {
-    console.error("File upload failed:", error);
-  }
+  }, 10000); // 10 seconds delay
 };
 </script>
 
@@ -82,7 +93,7 @@ const uploadFile = async () => {
 .upload-box {
   width: 100%;
   padding: 30px;
-  border: 2px dashed #46BCC5; /* Primary accent */
+  border: 2px dashed #46BCC5; 
   border-radius: 10px;
   cursor: pointer;
   display: flex;
@@ -115,6 +126,10 @@ button {
   cursor: pointer;
   width: 100%;
   transition: background-color 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 button:disabled {
@@ -123,6 +138,21 @@ button:disabled {
 }
 
 button:hover:not(:disabled) {
-  background-color: #46BCC5; /* Lighter hover effect */
+  background-color: #46BCC5;
+}
+
+/* Loader animation */
+.loader {
+  width: 20px;
+  height: 20px;
+  border: 3px solid white;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
