@@ -1,13 +1,14 @@
 import os
 import shutil
 import logging
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, UploadFile, HTTPException, File, Response
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 from starlette.background import BackgroundTask
 import REMOVE_MERGE_FONTFACE as RMF
 
+import re
 app = FastAPI()
 
 app.add_middleware(
@@ -24,7 +25,7 @@ def clean():
 
 @app.get("/hello")
 async def hello():
-    return "HELLO WORLD"
+    return "heyy !!!!"
 
 
 @app.post("/reduire")
@@ -68,3 +69,36 @@ async def optimise_images(html_file: UploadFile, del_jpeg: int = 0):
     except Exception as e:
         logging.error(f"Erreur lors de l'optimisation du fichier : {e}")
         raise HTTPException(status_code=500, detail=f"Erreur : {e}")
+
+
+UPLOAD_DIR = "tmp"
+os.makedirs(UPLOAD_DIR, exist_ok=True)  
+
+@app.post("/fix-alt")
+async def fix_alt(file: UploadFile = File(...)):
+    print(f"Received file: {file.filename}")
+    file_path = f"{UPLOAD_DIR}/{file.filename}"
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    print("File saved successfully")
+    
+    with open(file_path, "r", encoding="utf-8") as f:
+        html_content = f.read()
+    
+    img_pattern = re.compile(r'(<img\s+[^>]*?src="[^"]+")(?!\s+alt="image")', re.IGNORECASE)
+    count = 0
+    
+    def add_alt(match):
+        nonlocal count
+        count += 1
+        return f'{match.group(1)} alt="image"'
+    
+    updated_content = img_pattern.sub(add_alt, html_content)
+    print(f"Number of alt attributes added: {count}")
+    
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(updated_content)
+    print("Updated file saved")
+    
+    return Response(content=updated_content, media_type=file.content_type)

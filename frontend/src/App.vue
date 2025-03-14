@@ -6,7 +6,7 @@ import Sidebar from "./components/Sidebar.vue";
   <div class="app-container">
     <Sidebar />
     <div class="content">
-      <router-view /> <!-- This will display the routed component -->
+      <router-view />
     </div>
   </div>
 </template>
