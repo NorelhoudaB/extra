@@ -81,7 +81,7 @@ async def fix_alt(file: UploadFile = File(...)):
     
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    print("File saved successfully")
+    print("File saved successfully~")
     
     with open(file_path, "r", encoding="utf-8") as f:
         html_content = f.read()

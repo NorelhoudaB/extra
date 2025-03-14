@@ -12,7 +12,6 @@ import urllib.request
 import zipfile
 import shutil
 
-# part 1
 
 def remove_font_face(html_file_path):
     # read content file html
