@@ -7,8 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 from starlette.background import BackgroundTask
 import REMOVE_MERGE_FONTFACE as RMF
-
+from lxml import etree
 import re
+
+
+
 app = FastAPI()
 
 app.add_middleware(
@@ -19,56 +22,45 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def clean():
-    if os.path.exists("tmp"):
-        shutil.rmtree("tmp")
-
+def clean():  
+    tmpdir = Path("tmp")
+    for file in tmpdir.iterdir():
+        file.unlink()
+    tmpdir.rmdir()
+    
 @app.get("/hello")
 async def hello():
     return "heyy !!!!"
 
-
 @app.post("/reduire")
-async def optimise_images(file: UploadFile, del_jpeg: int = 0):
+async def optimise_images(file: UploadFile = File(...), del_jpeg: int = 0):
     try:
+        logging.info(f"Début de l'optimisation des images {file.filename}")
         if not file:
             raise HTTPException(status_code=400, detail="Erreur : Veuillez choisir un fichier HTML")
+
+        file_path_html = Path(UPLOAD_DIR) / file.filename
+
+        file_content = await file.read()
+        if not file_content:
+            raise HTTPException(status_code=400, detail="Erreur : Le fichier est vide ou corrompu")
+
+        with file_path_html.open("wb") as f:
+            f.write(file_content)
+
         
-        tmpdir = "tmp"
-        os.makedirs(tmpdir, exist_ok=True)  # Ensure tmp directory exists
+        output_file_path = RMF.process_images(file_path_html, del_jpeg)
 
-        file_path_html = Path(tmpdir) / file.filename
-        with file_path_html.open("wb") as file:
-            file.write(await file.read())
+        if output_file_path is None or not output_file_path.exists():
+            raise HTTPException(status_code=500, detail="Erreur : Le fichier traité est introuvable")
 
-        # Debugging: Check if the file actually exists
-        if not file_path_html.exists():
-            raise HTTPException(status_code=500, detail=f"Erreur : File {file_path_html} was not saved correctly")
+        download_url = f"/download/{output_file_path.name}"
 
-        print(f"✅ File saved at: {file_path_html}")
-
-        # Debugging: Print before processing the file
-        print(f"📌 Sending file to RMF.process_images: {file_path_html}")
-
-        if not file_path_html.exists():
-          logging.error(f"File does not exist: {file_path_html}")
-          raise HTTPException(status_code=500, detail=f"Erreur : File {file_path_html} not found before processing")
-
-        modified_html = RMF.process_images(file_path_html, del_jpeg)
-
-
-        with file_path_html.open("w", encoding="utf-8") as f:
-            f.write(modified_html)
-
-        return FileResponse(
-            file_path_html,
-            media_type="application/xhtml+xml",
-            background=BackgroundTask(clean),
-        )
+        return JSONResponse(content={"message": "Fichier optimisé avec succès", "download_url": download_url})
 
     except Exception as e:
-        logging.error(f"Erreur lors de l'optimisation du fichier : {e}")
-        raise HTTPException(status_code=500, detail=f"Erreur : {e}")
+        logging.error(f"Erreur lors de l'optimisation du fichier : {file.filename} - {e}")
+        raise HTTPException(status_code=500, detail=f"Erreur : {str(e)}")
 
 
 UPLOAD_DIR = "tmp"
@@ -82,13 +74,12 @@ async def fix_alt(file: UploadFile = File(...)):
     processed_file_path = f"{UPLOAD_DIR}/{file.filename}"
 
     with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    print("File saved successfully~")
+     print(f"File saved successfully~")
 
     with open(file_path, "r", encoding="utf-8") as f:
         html_content = f.read()
 
-    img_pattern = re.compile(r'(<img\s+[^>]*?src="[^"]+")(?!\s+alt="image")', re.IGNORECASE)
+    img_pattern = re.compile(r'(<img\s+[^>]*?src="[^"]+")(?!\s+alt="image"\s)', re.IGNORECASE)
     count = 0
 
     def add_alt(match):
@@ -108,7 +99,67 @@ async def fix_alt(file: UploadFile = File(...)):
 
     return JSONResponse(content={"processed": updated_content, "download_url": download_url})
 
+@app.post("/convert-xhtml")
+async def convert_xhtml(file: UploadFile = File(...)):
+    xhtml_path = os.path.join(UPLOAD_DIR, file.filename)
+    html_path = os.path.join(UPLOAD_DIR, file.filename.replace(".xhtml", ".html"))       
+    def xhtml_to_html(xhtml_file, html_file):
+        parser = etree.XMLParser(recover=True)
+        tree = etree.parse(xhtml_file, parser)
 
+        for elem in tree.xpath('//@*'):
+            if elem is None:
+                elem.getparent().remove(elem)
+
+        html_content = etree.tostring(tree, method="html", encoding="unicode")
+
+        with open(html_file, "w", encoding="utf-8") as f:
+            f.write(html_content)
+
+    with open(xhtml_path, "wb") as f:
+        f.write(await file.read())
+
+    xhtml_to_html(xhtml_path, html_path)
+
+    return {"download_url": f"/download/{os.path.basename(html_path)}"}
+
+@app.post("/change-thead")
+async def change_thead(file: UploadFile):
+    if not file.filename.endswith(('.html', '.xhtml')):
+        raise HTTPException(400, "Invalid file type. Please upload an HTML or XHTML file.")
+
+    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    processed_filename = file.filename.replace(".xhtml", ".xhtml").replace(".html", ".html")
+    processed_path = os.path.join(UPLOAD_DIR, processed_filename)
+
+    print(f"Saving uploaded file: {file_path}")
+
+    try:
+        content = (await file.read()).decode('utf-8')
+
+        def replace_thead_if_no_tbody(table_content):
+            if re.search(r'<thead\b', table_content) and not re.search(r'<tbody\b', table_content):
+                return re.sub(r'</?thead\b', lambda x: x.group().replace('thead', 'tbody'), table_content)
+            return table_content
+
+        updated_content = re.sub(
+            r'<table[^>]*>.*?</table>',
+            lambda m: replace_thead_if_no_tbody(m.group()),
+            content,
+            flags=re.DOTALL
+        )
+
+        with open(processed_path, "w", encoding="utf-8") as f:
+            f.write(updated_content)
+
+        print(f"Processed file saved: {processed_path}")
+
+        return {"download_url": f"/download/{processed_filename}"}
+
+    except Exception as e:
+        print(f"Error processing file: {str(e)}")
+        raise HTTPException(500, f"An error occurred while processing the file: {str(e)}")
+    
 @app.get("/download/{filename}")
 async def download_file(filename: str):
     processed_file_path = f"{UPLOAD_DIR}/{filename}"

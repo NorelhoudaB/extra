@@ -183,12 +183,12 @@ def process_images(html_file, sup_image):
         logging.error(f"❌ Error reading HTML file: {e}")
         return None
 
-    # Check if JPEG images exist
+    
     jpeg = contain_jpeg(html)
     logging.info(f"📸 Contains JPEG images? {jpeg}")
 
     try:
-        # Reduce PNG images
+       
         logging.info("🔧 Reducing PNG images...")
         soup = Reduce_images(html)
         logging.info("✅ PNG image reduction complete")
@@ -199,30 +199,30 @@ def process_images(html_file, sup_image):
     if sup_image and jpeg:
         try:
             soup = supprimer_images(soup)
-            logging.info("✅ JPEG images successfully removed")
+            print("✅ JPEG images successfully removed")
         except Exception as e:
-            logging.error(f"❌ Error removing JPEG images: {e}")
+            print(f"❌ Error removing JPEG images: {e}")
             return None
     else:
-        logging.info("ℹ️ JPEG removal not required or no JPEGs found")
+       print("ℹ️ JPEG removal not required or no JPEGs found")
 
-    # Ensure output file is in the correct directory
-    output_path = Path("tmp") / (html_file.stem + "_reduit.html")
-    logging.info(f"📁 Output path: {output_path}")
+   
+    output_path = Path("tmp") / (html_file.stem + ".html")
+    print(f"📁 Output path: {output_path}")
 
     try:
         with output_path.open("w", encoding="utf-8") as file:
             file.write(str(soup))
-            logging.info(f"✅ Processed file successfully written: {output_path}")
+            print(f"✅ Processed file successfully written: {output_path}")
     except Exception as e:
-        logging.error(f"❌ Error writing processed file: {e}")
+        print(f"❌ Error writing processed file: {e}")
         return None
 
     if not output_path.exists():
-        logging.error(f"❌ Output file not found after writing: {output_path}")
+        print(f"❌ Output file not found after writing: {output_path}")
         return None
 
-    logging.info(f"🎉 Image processing completed successfully: {output_path}")
+    print(f"🎉 Image processing completed successfully: {output_path}")
     return output_path
 #%%
 #process_images("./URD_JC_DECAUX_2023_FR_202403291802.html",1)

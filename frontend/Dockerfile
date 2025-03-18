@@ -10,6 +10,6 @@ COPY . .
  
 ENV PORT=5173
 
-EXPOSE 80 5679
+EXPOSE 5173
 
 CMD ["npm", "run", "dev"]

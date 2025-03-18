@@ -22,19 +22,19 @@ RUN apt-get update && apt-get install -y \
     pngquant \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Google Chrome 114
-RUN wget https://chrome-versions.com/google-chrome-stable-114.0.5735.106-1.deb -O /tmp/google-chrome.deb && \
-    apt-get update && \
-    apt-get install -y /tmp/google-chrome.deb && \
-    rm /tmp/google-chrome.deb
+# # Install Google Chrome 114
+# RUN wget https://chrome-versions.com/google-chrome-stable-114.0.5735.106-1.deb -O /tmp/google-chrome.deb && \
+#     apt-get update && \
+#     apt-get install -y /tmp/google-chrome.deb && \
+#     rm /tmp/google-chrome.deb
 
-# Install ChromeDriver
-RUN apt-get update && apt-get install -y unzip curl wget && \
-    CHROMEDRIVER_VERSION=114 && \
-    wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/114.0.5735.16/chromedriver_linux64.zip && \
-    unzip /tmp/chromedriver.zip -d /usr/bin/ && \
-    chmod +x /usr/bin/chromedriver && \
-    rm /tmp/chromedriver.zip
+# # Install ChromeDriver
+# RUN apt-get update && apt-get install -y unzip curl wget && \
+#     CHROMEDRIVER_VERSION=114 && \
+#     wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/114.0.5735.16/chromedriver_linux64.zip && \
+#     unzip /tmp/chromedriver.zip -d /usr/bin/ && \
+#     chmod +x /usr/bin/chromedriver && \
+#     rm /tmp/chromedriver.zip
 
 # Install Python 3.9
 RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update && apt-get install -y \
@@ -66,13 +66,13 @@ COPY ./requirements.txt /code/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 # Copy application code
-COPY . /code/app
+COPY . /code
 
 # Expose port
-EXPOSE 80 5678
+EXPOSE 80 8998
 
 # Start FastAPI app
-# CMD ["fastapi", "run", "/code/app/main.py", "--port", "80"]
+# CMD ["fastapi", "run", "/code/main.py", "--port", "80"]
 # CMD ["uvicorn", "app.main:app", "--reload" , "--host", "0.0.0.0", "--port", "80"]
 # Start FastAPI app with debugpy
-CMD ["python3.9", "-m", "debugpy", "--listen", "0.0.0.0:5678", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80", "--reload"]
+CMD ["python3.9", "-m", "debugpy", "--listen", "0.0.0.0:8998", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--reload"]

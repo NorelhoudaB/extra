@@ -5,7 +5,9 @@ import FileUpload from "../components/FileUpload.vue";
 const routes = [
   { path: '/reduire', component: FileUpload },
   { path: '/fix-alt', component: FileUpload }, 
-  { path: '/convert-xhtml', component: FileUpload }
+  { path: '/convert-xhtml', component: FileUpload },
+  { path: '/change-thead', component: FileUpload },
+  { path: '/fix-and', component: FileUpload }
 ];
 
 const router = createRouter({

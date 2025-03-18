@@ -30,7 +30,17 @@ const selectOption = (option: string) => {
       </li>
       <li class="nav-item">
         <a href="/convert-xhtml" class="nav-link">
-          <i class="bi bi-code-slash"></i> Convertir XHTML en HTML
+          <i class="bi bi-filetype-html"></i> Convertir XHTML en HTML
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="/change-thead" class="nav-link">
+          <i class="bi bi-code-slash"></i> Changer "thead"
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="/fix-and" class="nav-link">
+          <i class="bi bi-braces-asterisk"></i> Fixer "&"
         </a>
       </li>
     </ul>
