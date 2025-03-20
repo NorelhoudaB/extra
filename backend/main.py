@@ -19,7 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR = "tmp"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @app.get("/hello")
@@ -112,6 +112,7 @@ async def convert_xhtml(file: UploadFile = File(...)):
 
     return FileResponse(html_path, filename=os.path.basename(html_path), media_type="text/html")
 
+
 @app.post("/change-thead")
 async def change_thead(file: UploadFile):
     print(f"Received file: {file.filename}")
@@ -171,3 +172,45 @@ async def fix_space(file: UploadFile = File(...)):
     print(f"Processed file saved to {processed_path}")
 
     return FileResponse(processed_path, filename=processed_filename, media_type="text/html")
+ 
+@app.post("/fix-table")
+async def fix_table_endpoint(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        html = contents.decode("utf-8")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Erreur lors de la lecture du fichier.")
+   
+    updated_content = fix_table_html(html)
+ 
+    corrected_file_path = os.path.join(UPLOAD_DIR, f"corrected_{file.filename}")
+    with open(corrected_file_path, "w", encoding="utf-8") as f:
+        f.write(updated_content)
+ 
+    return FileResponse(corrected_file_path, filename=f"corrected_{file.filename}", media_type="text/html")
+
+def fix_table_html(html: str) -> str:
+    """
+    Corrige la structure des balises <table> dans le HTML/XHTML :
+      - Supprime les tables vides (contenant uniquement espaces et retours à la ligne).
+      - Si la table ne contient pas de <tbody>, remplace <thead> et <tfoot> par <tbody>.
+      - Si la table contient déjà un <tbody> (même avec <thead> et/ou <tfoot>), on ne modifie rien.
+    """
+    # 1. Supprimer les tables vides : <table ...> ne contenant que des espaces ou retours à la ligne
+    html = re.sub(r'<table\b[^>]*>\s*</table>', '', html, flags=re.IGNORECASE)
+ 
+    # 2. Pour chaque bloc <table>...</table> traité avec un callback
+    def process_table(match):
+        table_html = match.group(0)
+        # Si la table contient déjà un <tbody>, on ne fait rien
+        if re.search(r'<tbody\b', table_html, flags=re.IGNORECASE):
+            return table_html
+        # Sinon, on remplace les balises <thead> et <tfoot> par <tbody>
+        # Remplacement pour les balises ouvrantes et fermantes
+        table_html = re.sub(r'<(/?)(thead|tfoot)\b', r'<\1tbody', table_html, flags=re.IGNORECASE)
+        return table_html
+ 
+    # On parcourt chaque table complète en utilisant DOTALL pour inclure les retours à la ligne
+    html = re.sub(r'(<table\b.*?</table>)', process_table, html, flags=re.IGNORECASE | re.DOTALL)
+   
+    return html

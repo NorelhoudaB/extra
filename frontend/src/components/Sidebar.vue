@@ -34,8 +34,8 @@ const selectOption = (option: string) => {
         </a>
       </li>
       <li class="nav-item">
-        <a href="/change-thead" class="nav-link">
-          <i class="bi bi-code-slash"></i> Changer "thead"
+        <a href="/fix-table" class="nav-link">
+          <i class="bi bi-table"></i> Fixer les balises table
         </a>
       </li>
       <li class="nav-item">

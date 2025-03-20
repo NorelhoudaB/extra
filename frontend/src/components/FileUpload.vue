@@ -32,7 +32,7 @@ const apiEndpoint = computed(() => {
   if (route.path === "/reduire") return "/reduire";
   if (route.path === "/fix-alt") return "/fix-alt";
   if (route.path === "/convert-xhtml") return "/convert-xhtml";
-  if (route.path === "/change-thead") return "/change-thead";
+  if (route.path === "/fix-table") return "/fix-table";
   if (route.path === "/fix-space") return "/fix-space";
   return "/";
 });
