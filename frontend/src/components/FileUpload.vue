@@ -1,14 +1,25 @@
 <template>
-  <div class="upload-container" @dragover.prevent @drop="handleDrop">
-    <input type="file" id="file-upload" @change="handleFileChange" accept=".html,.xhtml" hidden />
-    <label for="file-upload" class="upload-box">
-      <div v-if="!selectedFile">
-        <i class="bi bi-cloud-upload upload-icon"></i>
-        <p>Aucun fichier n'a encore été choisi!</p>
+  <div class="upload-container">
+    <div class="upload-content">
+      <!-- Upload Box -->
+      <div class="upload-box" @dragover.prevent @drop="handleDrop">
+        <input type="file" id="file-upload" @change="handleFileChange" accept=".html,.xhtml" hidden />
+        <label for="file-upload">
+          <div v-if="!selectedFile">
+            <i class="bi bi-cloud-upload upload-icon"></i>
+            <p>Aucun fichier n'a encore été choisi!</p>
+          </div>
+          <p v-else class="selected-file">{{ selectedFile.name }}</p>
+        </label>
       </div>
-      <p v-else class="selected-file">{{ selectedFile.name }}</p>
-    </label>
 
+      <!-- Description Box -->
+      <div class="description-box">
+        <p>{{ description }}</p>
+      </div>
+    </div>
+
+    <!-- Upload Button -->
     <button @click="uploadFile" :disabled="!selectedFile || isLoading">
       <span v-if="!isLoading">Envoyer</span>
       <span v-else class="loader"></span>
@@ -21,7 +32,10 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import axios from 'axios';
+
+const props = defineProps({
+  description: String
+});
 
 const isLoading = ref(false);
 const selectedFile = ref(null);
@@ -29,13 +43,26 @@ const fileError = ref("");
 const route = useRoute();
 
 const apiEndpoint = computed(() => {
-  if (route.path === "/reduire") return "/reduire";
-  if (route.path === "/fix-alt") return "/fix-alt";
-  if (route.path === "/convert-xhtml") return "/convert-xhtml";
-  if (route.path === "/fix-table") return "/fix-table";
-  if (route.path === "/fix-space") return "/fix-space";
-  return "/";
+  const routes = {
+    "/reduire": "/reduire",
+    "/fix-alt": "/fix-alt",
+    "/convert-xhtml": "/convert-xhtml",
+    "/fix-table": "/fix-table",
+    "/fix-space": "/fix-space"
+  };
+  return routes[route.path] || "/";
 });
+
+const defaultDescriptions = {
+  "/reduire": "Optimisez et compressez votre fichier pour réduire sa taille tout en maintenant la qualité.",
+  "/fix-alt": "Corrigez les balises alt manquantes dans les images.  Erreur: The attribute 'alt' is required but missing",
+  "/convert-xhtml": "Convertissez votre fichier XHTML en HTML standard.",
+  "/fix-table": "Corrigez les erreurs de structure dans les tableaux HTML.",
+  "/fix-space": "Changer les caractères spéciaux par des espaces classique dans le code HTML."
+};
+
+
+const description = computed(() => props.description || defaultDescriptions[route.path] || "Upload a file");
 
 const isValidFileType = (file) => file && /\.(xhtml|html)$/i.test(file.name);
 
@@ -69,15 +96,15 @@ const uploadFile = async () => {
 
   const formData = new FormData();
   formData.append("file", selectedFile.value);
-  console.log("Uploading:", selectedFile.value);
 
   try {
-    const response = await axios.post(`http://localhost:8998${apiEndpoint.value}`, formData, {
-      responseType: "blob",
-      headers: { "Content-Type": "multipart/form-data" },
+    const response = await fetch(`http://localhost:8998${apiEndpoint.value}`, {
+      method: "POST",
+      body: formData
     });
 
-    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
     link.setAttribute("download", selectedFile.value.name);
@@ -101,13 +128,20 @@ const uploadFile = async () => {
   padding: 30px;
   background-color: #F8F8FA;
   border-radius: 15px;
-  width: 400px;
+  width: 450px;
   text-align: center;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.upload-box {
+.upload-content {
+  display: flex;
   width: 100%;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.upload-box {
+  flex: 1;
   padding: 30px;
   border: 2px dashed #46BCC5;
   border-radius: 10px;
@@ -132,6 +166,14 @@ const uploadFile = async () => {
 .selected-file {
   font-weight: bold;
   color: #366998;
+}
+
+.description-box {
+  flex: 1;
+  padding-left: 20px;
+  text-align: left;
+  font-size: 14px;
+  color: #333;
 }
 
 button {

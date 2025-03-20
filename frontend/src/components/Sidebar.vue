@@ -40,7 +40,7 @@ const selectOption = (option: string) => {
       </li>
       <li class="nav-item">
         <a href="/fix-space" class="nav-link">
-          <i class="bi bi-braces-asterisk"></i> Espace classique
+          <i class="bi bi-braces-asterisk"></i> Changer les espaces
         </a>
       </li>
     </ul>
