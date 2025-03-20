@@ -7,7 +7,7 @@ const routes = [
   { path: '/fix-alt', component: FileUpload }, 
   { path: '/convert-xhtml', component: FileUpload },
   { path: '/change-thead', component: FileUpload },
-  { path: '/fix-and', component: FileUpload }
+  { path: '/fix-space', component: FileUpload }
 ];
 
 const router = createRouter({

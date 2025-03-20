@@ -1,14 +1,20 @@
 <template>
   <div class="upload-container" @dragover.prevent @drop="handleDrop">
-    <input type="file" id="file-upload" @change="handleFileChange" hidden />
+    <input type="file" id="file-upload" @change="handleFileChange" accept=".html,.xhtml" hidden />
     <label for="file-upload" class="upload-box">
-      <div v-if="!selectedFile" >
+      <div v-if="!selectedFile">
         <i class="bi bi-cloud-upload upload-icon"></i>
         <p>Aucun fichier n'a encore été choisi!</p>
       </div>
       <p v-else class="selected-file">{{ selectedFile.name }}</p>
     </label>
-    <button @click="uploadFile" :disabled="!selectedFile">Envoyer</button>
+
+    <button @click="uploadFile" :disabled="!selectedFile || isLoading">
+      <span v-if="!isLoading">Envoyer</span>
+      <span v-else class="loader"></span>
+    </button>
+
+    <p v-if="fileError" class="error-message">{{ fileError }}</p>
   </div>
 </template>
 
@@ -17,7 +23,9 @@ import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import axios from 'axios';
 
+const isLoading = ref(false);
 const selectedFile = ref(null);
+const fileError = ref("");
 const route = useRoute();
 
 const apiEndpoint = computed(() => {
@@ -25,25 +33,39 @@ const apiEndpoint = computed(() => {
   if (route.path === "/fix-alt") return "/fix-alt";
   if (route.path === "/convert-xhtml") return "/convert-xhtml";
   if (route.path === "/change-thead") return "/change-thead";
-  if (route.path === "/fix-and") return "fix-and";
-  
-  
+  if (route.path === "/fix-space") return "/fix-space";
   return "/";
 });
 
+const isValidFileType = (file) => file && /\.(xhtml|html)$/i.test(file.name);
+
 const handleFileChange = (event) => {
-  selectedFile.value = event.target.files[0];
+  const file = event.target.files[0];
+  if (isValidFileType(file)) {
+    selectedFile.value = file;
+    fileError.value = "";
+  } else {
+    fileError.value = "Seuls les fichiers HTML et XHTML sont autorisés.";
+    event.target.value = null;
+    selectedFile.value = null;
+  }
 };
 
 const handleDrop = (event) => {
   event.preventDefault();
-  if (event.dataTransfer.files.length) {
-    selectedFile.value = event.dataTransfer.files[0];
+  const file = event.dataTransfer.files[0];
+  if (isValidFileType(file)) {
+    selectedFile.value = file;
+    fileError.value = "";
+  } else {
+    fileError.value = "Seuls les fichiers HTML et XHTML sont autorisés.";
+    selectedFile.value = null;
   }
 };
 
 const uploadFile = async () => {
   if (!selectedFile.value) return;
+  isLoading.value = true;
 
   const formData = new FormData();
   formData.append("file", selectedFile.value);
@@ -51,21 +73,21 @@ const uploadFile = async () => {
 
   try {
     const response = await axios.post(`http://localhost:8998${apiEndpoint.value}`, formData, {
+      responseType: "blob",
       headers: { "Content-Type": "multipart/form-data" },
     });
 
-    console.log("File uploaded successfully:", response.data);
-
-    if (response.data.download_url) {
-      const downloadLink = document.createElement("a");
-      downloadLink.href = `http://localhost:8998${response.data.download_url}`;
-      downloadLink.setAttribute("download", "");
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-    }
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", selectedFile.value.name);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   } catch (error) {
     console.error("File upload failed:", error);
+  } finally {
+    isLoading.value = false;
   }
 };
 </script>
@@ -77,7 +99,7 @@ const uploadFile = async () => {
   align-items: center;
   gap: 15px;
   padding: 30px;
-  background-color: #F8F8FA; 
+  background-color: #F8F8FA;
   border-radius: 15px;
   width: 400px;
   text-align: center;
@@ -87,7 +109,7 @@ const uploadFile = async () => {
 .upload-box {
   width: 100%;
   padding: 30px;
-  border: 2px dashed #46BCC5; /* Primary accent */
+  border: 2px dashed #46BCC5;
   border-radius: 10px;
   cursor: pointer;
   display: flex;
@@ -103,13 +125,13 @@ const uploadFile = async () => {
 
 .upload-icon {
   font-size: 50px;
-  color: #04183A; 
+  color: #04183A;
   margin-bottom: 10px;
 }
 
 .selected-file {
   font-weight: bold;
-  color: #366998; 
+  color: #366998;
 }
 
 button {
@@ -120,6 +142,10 @@ button {
   cursor: pointer;
   width: 100%;
   transition: background-color 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 button:disabled {
@@ -128,6 +154,25 @@ button:disabled {
 }
 
 button:hover:not(:disabled) {
-  background-color: #46BCC5; /* Lighter hover effect */
+  background-color: #46BCC5;
+}
+
+.loader {
+  width: 20px;
+  height: 20px;
+  border: 3px solid white;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  color: red;
+  font-size: 14px;
 }
 </style>

@@ -39,8 +39,8 @@ const selectOption = (option: string) => {
         </a>
       </li>
       <li class="nav-item">
-        <a href="/fix-and" class="nav-link">
-          <i class="bi bi-braces-asterisk"></i> Fixer "&"
+        <a href="/fix-space" class="nav-link">
+          <i class="bi bi-braces-asterisk"></i> Espace classique
         </a>
       </li>
     </ul>
