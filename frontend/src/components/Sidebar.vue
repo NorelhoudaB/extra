@@ -71,10 +71,13 @@ const toggleSidebar = () => {
   width: 100%;
   cursor: pointer;
 }
-
 .logo {
   max-width: 150px;
   height: auto;
+}
+
+.sidebar[style*="width: 60px"] .logo {
+  max-width: 40px; 
 }
 
 .nav-item {
@@ -101,6 +104,7 @@ const toggleSidebar = () => {
   flex-grow: 1;
   text-align: right;
   transition: opacity 0.3s;
+  font-size: 15px;
 }
 
 .nav-item i {
