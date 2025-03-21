@@ -84,11 +84,20 @@ async def fix_alt(file: UploadFile = File(...)):
 
     return FileResponse(processed_file_path, filename=file.filename, media_type="text/html")
 
+
 @app.post("/convert-xhtml")
 async def convert_xhtml(file: UploadFile = File(...)):
     print(f"Received XHTML file: {file.filename}")
+    
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+    base_name = os.path.splitext(file.filename)[0]
     xhtml_path = os.path.join(UPLOAD_DIR, file.filename)
-    html_path = os.path.join(UPLOAD_DIR, file.filename.replace(".xhtml", ".html"))       
+    html_path = os.path.join(UPLOAD_DIR, f"{base_name}.html")
+
+    with open(xhtml_path, "wb") as f:
+        f.write(await file.read())
+    print(f"Saved XHTML file: {xhtml_path}")
 
     def xhtml_to_html(xhtml_file, html_file):
         parser = etree.XMLParser(recover=True)
@@ -103,47 +112,43 @@ async def convert_xhtml(file: UploadFile = File(...)):
         with open(html_file, "w", encoding="utf-8") as f:
             f.write(html_content)
 
-    with open(xhtml_path, "wb") as f:
-        f.write(await file.read())
-    print(f"Saved XHTML file: {xhtml_path}")
-
     xhtml_to_html(xhtml_path, html_path)
     print(f"Converted HTML file saved: {html_path}")
 
-    return FileResponse(html_path, filename=os.path.basename(html_path), media_type="text/html")
+   
+    return FileResponse(html_path, filename=f"{base_name}.html", media_type="text/html")
 
+# @app.post("/change-thead")
+# async def change_thead(file: UploadFile):
+#     print(f"Received file: {file.filename}")
+#     if not file.filename.endswith(('.html', '.xhtml')):
+#         print("Invalid file type")
+#         raise HTTPException(400, "Invalid file type. Please upload an HTML or XHTML file.")
 
-@app.post("/change-thead")
-async def change_thead(file: UploadFile):
-    print(f"Received file: {file.filename}")
-    if not file.filename.endswith(('.html', '.xhtml')):
-        print("Invalid file type")
-        raise HTTPException(400, "Invalid file type. Please upload an HTML or XHTML file.")
+#     file_path = os.path.join(UPLOAD_DIR, file.filename)
+#     processed_filename = file.filename.replace(".xhtml", ".xhtml").replace(".html", ".html")
+#     processed_path = os.path.join(UPLOAD_DIR, processed_filename)
 
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
-    processed_filename = file.filename.replace(".xhtml", ".xhtml").replace(".html", ".html")
-    processed_path = os.path.join(UPLOAD_DIR, processed_filename)
+#     content = (await file.read()).decode('utf-8')
 
-    content = (await file.read()).decode('utf-8')
+#     def replace_thead_if_no_tbody(table_content):
+#         if re.search(r'<thead\b', table_content) and not re.search(r'<tbody\b', table_content):
+#             return re.sub(r'</?thead\b', lambda x: x.group().replace('thead', 'tbody'), table_content)
+#         return table_content
 
-    def replace_thead_if_no_tbody(table_content):
-        if re.search(r'<thead\b', table_content) and not re.search(r'<tbody\b', table_content):
-            return re.sub(r'</?thead\b', lambda x: x.group().replace('thead', 'tbody'), table_content)
-        return table_content
+#     updated_content = re.sub(
+#         r'<table[^>]*>.*?</table>',
+#         lambda m: replace_thead_if_no_tbody(m.group()),
+#         content,
+#         flags=re.DOTALL
+#     )
 
-    updated_content = re.sub(
-        r'<table[^>]*>.*?</table>',
-        lambda m: replace_thead_if_no_tbody(m.group()),
-        content,
-        flags=re.DOTALL
-    )
+#     with open(processed_path, "w", encoding="utf-8") as f:
+#         f.write(updated_content)
 
-    with open(processed_path, "w", encoding="utf-8") as f:
-        f.write(updated_content)
+#     print(f"Processed file saved: {processed_path}")
 
-    print(f"Processed file saved: {processed_path}")
-
-    return FileResponse(processed_path, filename=processed_filename, media_type="text/html")
+#     return FileResponse(processed_path, filename=processed_filename, media_type="text/html")
 
 @app.post("/fix-space")
 async def fix_space(file: UploadFile = File(...)):

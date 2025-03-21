@@ -43,9 +43,9 @@ const route = useRoute();
 
 const defaultDescriptions = {
   "/reduire": "Optimisez et compressez votre fichier pour réduire sa taille tout en maintenant la qualité.",
-  "/fix-alt": "Corrigez les balises alt manquantes dans les images. Erreur: The attribute 'alt' is required but missing",
+  "/fix-alt": "Corrigez les balises alt manquantes dans les images. \nErreur: '{http://www.w3.org/1999/xhtml}img' : The attribute 'alt' is required but missing",
   "/convert-xhtml": "Convertissez votre fichier XHTML en HTML standard.",
-  "/fix-table": "Corrigez les erreurs de structure dans les tableaux HTML.",
+  "/fix-table": "Corrigez les erreurs de structure dans les tableaux. \n Erreur: '{http://www.w3.org/1999/xhtml}table': Missing child element(s)",
   "/fix-space": "Changer les caractères spéciaux par des espaces classique dans le code HTML."
 };
 
@@ -92,9 +92,15 @@ const uploadFile = async () => {
 
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
+
+    let filename = selectedFile.value.name;
+    if (route.path === "/convert-xhtml") {
+      filename = filename.replace(/\.(xhtml|html)$/i, ".html");
+    }
+
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", selectedFile.value.name);
+    link.setAttribute("download", filename);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -104,6 +110,7 @@ const uploadFile = async () => {
     isLoading.value = false;
   }
 };
+
 </script>
 
 <style scoped>
