@@ -107,7 +107,7 @@ const uploadFile = async () => {
 </script>
 
 <style scoped>
-/* Centering the whole content */
+
 .container {
   display: flex;
   flex-direction: column;
@@ -117,7 +117,6 @@ const uploadFile = async () => {
   padding: 20px;
 }
 
-/* Styling for the description box */
 .description-box {
   max-width: 450px;
   text-align: center;
@@ -130,7 +129,6 @@ const uploadFile = async () => {
   margin-bottom: 30px;
 }
 
-/* Upload container */
 .upload-container {
   display: flex;
   flex-direction: column;
@@ -144,7 +142,6 @@ const uploadFile = async () => {
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Upload box */
 .upload-box {
   flex: 1;
   padding: 30px;
@@ -168,14 +165,13 @@ const uploadFile = async () => {
   margin-bottom: 10px;
 }
 
-/* Selected file text */
+
 .selected-file {
   font-weight: bold;
   font-size: 16px;
   color: #366998;
 }
 
-/* Upload button */
 button {
   background-color: #366998;
   padding: 14px 20px;
@@ -200,7 +196,6 @@ button:hover:not(:disabled) {
   background-color: #46BCC5;
 }
 
-/* Loader animation */
 .loader {
   width: 20px;
   height: 20px;
@@ -215,7 +210,7 @@ button:hover:not(:disabled) {
   100% { transform: rotate(360deg); }
 }
 
-/* Error message */
+
 .error-message {
   color: red;
   font-size: 14px;
