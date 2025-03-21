@@ -43,9 +43,9 @@ const route = useRoute();
 
 const defaultDescriptions = {
   "/reduire": "Optimisez et compressez votre fichier pour réduire sa taille tout en maintenant la qualité.",
-  "/fix-alt": "Corrigez les balises alt manquantes dans les images. \nErreur: '{http://www.w3.org/1999/xhtml}img' : The attribute 'alt' is required but missing",
+  "/fix-alt": "Corrigez les balises alt manquantes dans les images. Erreur: '{http://www.w3.org/1999/xhtml}img' : The attribute 'alt' is required but missing",
   "/convert-xhtml": "Convertissez votre fichier XHTML en HTML standard.",
-  "/fix-table": "Corrigez les erreurs de structure dans les tableaux. \n Erreur: '{http://www.w3.org/1999/xhtml}table': Missing child element(s)",
+  "/fix-table": "Corrigez les erreurs de structure dans les tableaux. Erreur: '{http://www.w3.org/1999/xhtml}table': Missing child element(s)",
   "/fix-space": "Changer les caractères spéciaux par des espaces classique dans le code HTML."
 };
 
