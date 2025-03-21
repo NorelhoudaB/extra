@@ -1,31 +1,30 @@
 <template>
-  <div class="upload-container">
-    <div class="upload-content">
-      <!-- Upload Box -->
-      <div class="upload-box" @dragover.prevent @drop="handleDrop">
-        <input type="file" id="file-upload" @change="handleFileChange" accept=".html,.xhtml" hidden />
-        <label for="file-upload">
-          <div v-if="!selectedFile">
-            <i class="bi bi-cloud-upload upload-icon"></i>
-            <p>Aucun fichier n'a encore été choisi!</p>
-          </div>
-          <p v-else class="selected-file">{{ selectedFile.name }}</p>
-        </label>
-      </div>
-
-      <!-- Description Box -->
-      <div class="description-box">
-        <p>{{ description }}</p>
-      </div>
+  <div class="container">
+    <div class="description-box">
+      <p>{{ description }}</p>
     </div>
 
-    <!-- Upload Button -->
-    <button @click="uploadFile" :disabled="!selectedFile || isLoading">
-      <span v-if="!isLoading">Envoyer</span>
-      <span v-else class="loader"></span>
-    </button>
+    <div class="upload-container">
+      <div class="upload-content">
+        <div class="upload-box" @dragover.prevent @drop="handleDrop">
+          <input type="file" id="file-upload" @change="handleFileChange" accept=".html,.xhtml" hidden />
+          <label for="file-upload">
+            <div v-if="!selectedFile">
+              <i class="bi bi-cloud-upload upload-icon"></i>
+              <p>Aucun fichier n'a encore été choisi!</p>
+            </div>
+            <p v-else class="selected-file">{{ selectedFile.name }}</p>
+          </label>
+        </div>
+      </div>
 
-    <p v-if="fileError" class="error-message">{{ fileError }}</p>
+      <button @click="uploadFile" :disabled="!selectedFile || isLoading">
+        <span v-if="!isLoading">Envoyer</span>
+        <span v-else class="loader"></span>
+      </button>
+
+      <p v-if="fileError" class="error-message">{{ fileError }}</p>
+    </div>
   </div>
 </template>
 
@@ -42,25 +41,13 @@ const selectedFile = ref(null);
 const fileError = ref("");
 const route = useRoute();
 
-const apiEndpoint = computed(() => {
-  const routes = {
-    "/reduire": "/reduire",
-    "/fix-alt": "/fix-alt",
-    "/convert-xhtml": "/convert-xhtml",
-    "/fix-table": "/fix-table",
-    "/fix-space": "/fix-space"
-  };
-  return routes[route.path] || "/";
-});
-
 const defaultDescriptions = {
   "/reduire": "Optimisez et compressez votre fichier pour réduire sa taille tout en maintenant la qualité.",
-  "/fix-alt": "Corrigez les balises alt manquantes dans les images.  Erreur: The attribute 'alt' is required but missing",
+  "/fix-alt": "Corrigez les balises alt manquantes dans les images. Erreur: The attribute 'alt' is required but missing",
   "/convert-xhtml": "Convertissez votre fichier XHTML en HTML standard.",
   "/fix-table": "Corrigez les erreurs de structure dans les tableaux HTML.",
   "/fix-space": "Changer les caractères spéciaux par des espaces classique dans le code HTML."
 };
-
 
 const description = computed(() => props.description || defaultDescriptions[route.path] || "Upload a file");
 
@@ -98,7 +85,7 @@ const uploadFile = async () => {
   formData.append("file", selectedFile.value);
 
   try {
-    const response = await fetch(`http://localhost:8998${apiEndpoint.value}`, {
+    const response = await fetch(`http://localhost:8998${route.path}`, {
       method: "POST",
       body: formData
     });
@@ -120,12 +107,36 @@ const uploadFile = async () => {
 </script>
 
 <style scoped>
+/* Centering the whole content */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+  justify-content: center; 
+  width: 100%;
+  padding: 20px;
+}
+
+/* Styling for the description box */
+.description-box {
+  max-width: 450px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  background-color: #46BCC5;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+}
+
+/* Upload container */
 .upload-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
-  padding: 30px;
+  gap: 20px;
+  padding: 35px;
   background-color: #F8F8FA;
   border-radius: 15px;
   width: 450px;
@@ -133,13 +144,7 @@ const uploadFile = async () => {
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.upload-content {
-  display: flex;
-  width: 100%;
-  justify-content: space-between;
-  align-items: center;
-}
-
+/* Upload box */
 .upload-box {
   flex: 1;
   padding: 30px;
@@ -163,26 +168,22 @@ const uploadFile = async () => {
   margin-bottom: 10px;
 }
 
+/* Selected file text */
 .selected-file {
   font-weight: bold;
+  font-size: 16px;
   color: #366998;
 }
 
-.description-box {
-  flex: 1;
-  padding-left: 20px;
-  text-align: left;
-  font-size: 14px;
-  color: #333;
-}
-
+/* Upload button */
 button {
   background-color: #366998;
-  padding: 12px 18px;
+  padding: 14px 20px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   width: 100%;
+  font-size: 16px;
   transition: background-color 0.3s ease-in-out;
   display: flex;
   align-items: center;
@@ -199,6 +200,7 @@ button:hover:not(:disabled) {
   background-color: #46BCC5;
 }
 
+/* Loader animation */
 .loader {
   width: 20px;
   height: 20px;
@@ -213,6 +215,7 @@ button:hover:not(:disabled) {
   100% { transform: rotate(360deg); }
 }
 
+/* Error message */
 .error-message {
   color: red;
   font-size: 14px;
