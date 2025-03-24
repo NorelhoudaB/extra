@@ -1,4 +1,3 @@
-ftfy 
 bs4 
 selenium 
 fastapi[standard]
@@ -10,5 +9,6 @@ PyPDF2
 PyMuPDF
 unidecode
 debugpy
- fitz
- ftfy
+lxml
+fitz
+ftfy

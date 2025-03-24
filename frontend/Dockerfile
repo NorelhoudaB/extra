@@ -6,6 +6,8 @@ COPY package*.json ./
 
 RUN npm install
 
+ #RUN npm install bootstrap bootstrap-icons
+
 COPY . .
  
 ENV PORT=5173
