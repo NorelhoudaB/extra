@@ -40,7 +40,7 @@ const isLoading = ref(false);
 const selectedFile = ref(null);
 const fileError = ref("");
 const route = useRoute();
-
+// define the default descriptions for each route
 const defaultDescriptions = {
   "/reduire": "Optimisez et compressez votre fichier pour réduire sa taille tout en maintenant la qualité.",
   "/fix-alt": "Corrigez les balises alt manquantes dans les images. Erreur: '{http://www.w3.org/1999/xhtml}img' : The attribute 'alt' is required but missing",
@@ -50,7 +50,7 @@ const defaultDescriptions = {
 };
 
 const description = computed(() => props.description || defaultDescriptions[route.path] || "Upload a file");
-
+//only allow files with .html or .xhtml extension
 const isValidFileType = (file) => file && /\.(xhtml|html)$/i.test(file.name);
 
 const handleFileChange = (event) => {
@@ -97,7 +97,7 @@ const uploadFile = async () => {
     if (route.path === "/convert-xhtml") {
       filename = filename.replace(/\.(xhtml|html)$/i, ".html");
     }
-
+//the naming convention for the downloaded file
     const link = document.createElement("a");
     link.href = url;
     link.setAttribute("download", filename);
