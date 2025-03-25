@@ -22,6 +22,8 @@
         <span v-if="!isLoading">Envoyer</span>
         <span v-else class="loader"></span>
       </button>
+      <button class="annuler" @click="cancelUpload" v-if="isLoading">Annuler</button>
+
 
       <p v-if="fileError" class="error-message">{{ fileError }}</p>
     </div>
@@ -40,6 +42,19 @@ const isLoading = ref(false);
 const selectedFile = ref(null);
 const fileError = ref("");
 const route = useRoute();
+
+
+const cancelUpload = () => {
+  isLoading.value = false;
+  selectedFile.value = null;
+  fileError.value = "";
+  
+  // Reset the input field
+  const fileInput = document.getElementById("file-upload");
+  if (fileInput) {
+    fileInput.value = "";
+  }
+};
 // define the default descriptions for each route
 const defaultDescriptions = {
   "/reduire": "Optimisez et compressez votre fichier pour réduire sa taille tout en maintenant la qualité.",
@@ -192,6 +207,12 @@ button {
   align-items: center;
   justify-content: center;
   position: relative;
+}
+button.annuler{
+  background-color: #ff5733;
+}
+button.annuler:hover:not(:disabled) {
+  background-color: #ff5733;
 }
 
 button:disabled {
