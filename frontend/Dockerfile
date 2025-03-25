@@ -13,4 +13,5 @@ COPY . .
 ENV PORT=8911
 
 EXPOSE 8911
+
 CMD ["npm", "run", "dev"]
