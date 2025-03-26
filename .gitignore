@@ -1,2 +1,4 @@
 .history
 extra.git
+ __pycache__ 
+tmp
