@@ -6,12 +6,14 @@ COPY package*.json ./
 
 RUN npm install
 
- #RUN npm install bootstrap bootstrap-icons
+#RUN npm install bootstrap bootstrap-icons
 
 COPY . .
  
 ENV PORT=8911
+ENV HOST=0.0.0.0
 
 EXPOSE 8911
+
 
 CMD ["npm", "run", "dev"]
