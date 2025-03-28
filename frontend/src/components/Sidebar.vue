@@ -4,7 +4,7 @@ import {ref} from "vue";
 
 const route = useRoute();
 const router = useRouter();
-const isCollapsed = ref(false);
+const isCollapsed = ref(true);
 
 const selectOption = (option: string) => {
   router.push(option);

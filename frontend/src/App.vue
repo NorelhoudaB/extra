@@ -17,7 +17,7 @@ import Sidebar from "./components/Sidebar.vue";
 }
 
 .content {
-  margin-left: 260px;
+  margin-left: 100px;
   padding: 20px;
   width: 100%;
 }

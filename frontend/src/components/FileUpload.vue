@@ -130,17 +130,9 @@ const uploadFile = async () => {
 
 <style scoped>
 
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center; 
-  justify-content: center; 
-  width: 100%;
-  padding: 20px;
-}
 
 .description-box {
-  max-width: 450px;
+  max-width: 550px;
   text-align: center;
   font-size: 18px;
   font-weight: bold;
@@ -151,23 +143,24 @@ const uploadFile = async () => {
   margin-bottom: 30px;
 }
 
+
 .upload-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  padding: 35px;
-  background-color: #F8F8FA;
+  gap: 15px;
+  padding: 30px;
+  background-color: #F8F8FA; 
   border-radius: 15px;
-  width: 450px;
+  width: 550px;
   text-align: center;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .upload-box {
-  flex: 1;
+  width: 485px;
   padding: 30px;
-  border: 2px dashed #46BCC5;
+  border: 2px dashed #46BCC5; /* Primary accent */
   border-radius: 10px;
   cursor: pointer;
   display: flex;
@@ -196,7 +189,7 @@ const uploadFile = async () => {
 
 button {
   background-color: #366998;
-  padding: 14px 20px;
+  padding: 12px 18px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -208,6 +201,7 @@ button {
   justify-content: center;
   position: relative;
 }
+
 button.annuler{
   background-color: #ff5733;
 }
