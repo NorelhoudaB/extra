@@ -27,6 +27,11 @@ const toggleSidebar = () => {
     <!-- navitem -->
     <ul class="nav flex-column w-100 mt-4">
       <li class="nav-item">
+        <a href="/" class="nav-link" :class="{ active: route.path === '/' }" @click.prevent="selectOption('/')">
+          <span class="nav-text" v-show="!isCollapsed">Accueil</span> <i class="bi bi-house-fill"></i>
+        </a>
+      </li>
+      <li class="nav-item">
         <a href="/reduire" class="nav-link" :class="{ active: route.path === '/reduire' }" @click.prevent="selectOption('/reduire')">
           <span class="nav-text" v-show="!isCollapsed">Réduire la taille du fichier</span> <i class="bi bi-arrows-collapse-vertical"></i>
         </a>

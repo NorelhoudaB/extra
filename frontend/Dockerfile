@@ -1,6 +1,6 @@
 FROM node:18
 
-WORKDIR /frontend
+WORKDIR /code
 
 COPY package*.json ./
 
@@ -8,7 +8,7 @@ RUN npm install
 
 #RUN npm install bootstrap bootstrap-icons
 
-COPY . .
+COPY . /code
  
 ENV PORT=8911
 ENV HOST=0.0.0.0
