@@ -56,6 +56,12 @@ const toggleSidebar = () => {
           <span class="nav-text" v-show="!isCollapsed">Changer les espaces</span> <i class="bi bi-braces-asterisk"></i>
         </a>
       </li>
+      <li class="nav-item">
+        <a href="/merge-files" class="nav-link" :class="{ active: route.path === '/merge-files' }" @click.prevent="selectOption('/merge-files')">
+          <span class="nav-text" v-show="!isCollapsed">Fusionner les fichiers</span> <i class="bi bi-union"></i>
+        </a>
+      </li>
+      
     </ul>
   </div>
 </template>
