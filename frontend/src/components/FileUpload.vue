@@ -35,7 +35,7 @@
               </div>
               <p v-else class="selected-file">{{ file.name }}</p>
             </label>
-            <button v-if="file" class="remove-file" @click.stop="removeFile(index)">×</button>
+            <button v-if="file" class="remove-file" @click="cancelUpload" @click.stop="removeFile(index)">×</button>
           </div>
         </div>
       </div>
