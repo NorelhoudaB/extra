@@ -35,7 +35,7 @@
               </div>
               <p v-else class="selected-file">{{ file.name }}</p>
             </label>
-            <button v-if="file" class="remove-file" @click="cancelUpload" @click.stop="removeFile(index)">×</button>
+            <button v-if="file" class="remove-file" @click.stop="removeFile(index)">×</button>
           </div>
         </div>
       </div>
@@ -166,7 +166,7 @@ const uploadFile = async () => {
   const formData = new FormData();
 
   if (route.path === '/merge-files') {
-    // Use the exact field names the backend expects
+    
     if (selectedFiles.value[0]) formData.append("file_one", selectedFiles.value[0]);
     if (selectedFiles.value[1]) formData.append("file_two", selectedFiles.value[1]);
     if (selectedFiles.value[2]) formData.append("file_three", selectedFiles.value[2]);
@@ -187,14 +187,15 @@ const uploadFile = async () => {
 
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
+    
+    let filename = selectedFile.value.name;
 
-    let filename = "merged.html";
-    if (route.path !== '/merge-files') {
-      filename = selectedFile.value.name;
-      if (route.path === "/convert-xhtml") {
-        filename = filename.replace(/\.(xhtml|html)$/i, ".html");
-      }
-    }
+if (route.path === '/merge-files') {
+  filename = selectedFiles.value[1].name;
+} else if (route.path === '/convert-xhtml') {
+  filename = filename.replace(/\.(xhtml|html)$/i, '.html');
+}
+
 
     const link = document.createElement("a");
     link.href = url;

@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  frontend:
+    build: . 
+    container_name: frontend
+    volumes:
+      - .:/frontend
+    ports:
+      - "8911:8911"
+      - "3000:3000"
+
+    command: ["npm", "run", "dev"]  
+
+    restart: unless-stopped
+
+
+

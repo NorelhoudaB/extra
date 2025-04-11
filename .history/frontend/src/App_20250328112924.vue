@@ -1,0 +1,27 @@
+<script setup lang="ts">
+import Sidebar from "./components/Sidebar.vue";
+</script>
+
+<template>
+  <div class="app-container">
+    <Sidebar />
+    <div class="content">
+      <router-view />
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.app-container {
+  display: flex;
+  background-color: #9f8faA;
+}
+
+.content {
+  margin-left: 100px;
+  padding: 20px;
+  width: 100%;
+  background-color: #99f8fa;
+
+}
+</style>

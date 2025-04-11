@@ -1,0 +1,16 @@
+FROM node:18
+
+WORKDIR /frontend
+
+COPY package*.json ./
+
+RUN npm install
+
+ #RUN npm install bootstrap bootstrap-icons
+
+COPY . .
+ 
+ENV PORT=8910
+
+EXPOSE 8910
+CMD ["npm", "run", "dev"]

@@ -1,0 +1,20 @@
+import { createRouter, createWebHistory } from 'vue-router';
+// import FileUpload from './components/FileUpload.vue';
+import FileUpload from "../components/FileUpload.vue";
+import Homepage from "../components/Homepage.vue";
+
+const routes = [
+  { path: '/', component: Homepage },
+  { path: '/reduire', component: FileUpload },
+  { path: '/fix-alt', component: FileUpload }, 
+  { path: '/convert-xhtml', component: FileUpload },
+  { path: '/fix-table', component: FileUpload },
+  { path: '/fix-space', component: FileUpload }
+];
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+});
+
+export default router;

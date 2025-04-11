@@ -12,3 +12,4 @@ debugpy
 lxml
 fitz
 ftfy
+beautifulsoup4

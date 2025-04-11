@@ -315,54 +315,68 @@ def rename_a_classes_in_file(input_file, output_file):
     with open(output_file, 'w', encoding='utf-8') as file:
         file.write(updated_html)
 
+def sanitize_html_attributes(html_str):
+    soup = BeautifulSoup(html_str, 'lxml')
+    for tag in soup.find_all(True):
+        for attr, value in tag.attrs.items():
+            if isinstance(value, str):
+                value = value.replace('"', '&quot;')
+                tag[attr] = value
+            elif isinstance(value, list):
+                tag[attr] = [v.replace('"', '&quot;') for v in value]
+    return soup.body.decode_contents() if soup.body else str(soup)
+
 def combine_files(file_one, file_two, file_three):
     input_files = [file_one, file_two, file_three]
     style_dict, body_dict = extract_content(input_files)
 
     result = chk_cls(style_dict, input_files)
-
     if result is not None:
-        i, j = result  
+        i, j = result
         rename_batch_classes_in_file(input_files[i], f"modified_batch_{i}.html")
         rename_a_classes_in_file(input_files[i], f"modified_A_{i}.html")
-        
-        updated_file = f"modified_batch_{i}.html"  
+        updated_file = f"modified_batch_{i}.html"
         input_files[i] = updated_file
-        style_dict, body_dict = extract_content(input_files)  
+        style_dict, body_dict = extract_content(input_files)
 
-    styles = '\n'.join([style_dict[Path(path).stem] for path in input_files])
-    body_content = ''.join([body_dict[Path(path).stem] for path in input_files])
+    styles_combined = '\n'.join([style_dict[Path(path).stem] for path in input_files])
+    body_1_3_raw = ''.join([body_dict[Path(path).stem] for idx, path in enumerate(input_files) if idx != 1])
+    merged_body = sanitize_html_attributes(body_1_3_raw)
 
-    path_two = Path(file_two)
-    with open(path_two, 'r', encoding='utf-8') as f:
+    with open(file_two, 'r', encoding='utf-8') as f:
         content_two = f.read()
 
-    soup_two = BeautifulSoup(content_two, 'lxml')
+    head_style_pattern = re.compile(r'(<style[^>]*>)(.*?)(</style>)', re.DOTALL)
+    if '<style' in content_two:
+        content_two = head_style_pattern.sub(rf'\1{styles_combined}\3', content_two)
+    else:
+        content_two = content_two.replace('</head>', f'<style>{styles_combined}</style>\n</head>')
 
-    if soup_two.head:
-        style_tag = soup_two.head.find('style')
-        if style_tag:
-            style_tag.string = styles
-        else:
-            new_style_tag = soup_two.new_tag('style')
-            new_style_tag.string = styles
-            soup_two.head.append(new_style_tag)
-    
-    if soup_two.body:
-        soup_two.body.clear()
-        soup_two.body.append(BeautifulSoup(body_content, 'lxml'))
+    body_start = content_two.find('<body')
+    if body_start == -1:
+        raise ValueError("No <body> tag found in the base file.")
+    body_open_end = content_two.find('>', body_start)
+    first_div_close = content_two.find('</div>', body_open_end)
+    if first_div_close == -1:
+        raise ValueError("No </div> found inside <body> of the base file.")
 
-    output_file = path_two.parent / "merged_output.xhtml"
+    insert_index = first_div_close + len('</div>')
+    final_output = content_two[:insert_index] + merged_body + content_two[insert_index:]
+
+    output_file = Path(file_two).parent / "merged_output.xhtml"
     with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(str(soup_two))
-    
-    return str(output_file)  # Return the path as string
+        f.write(final_output)
+
+    return str(output_file)
+
+
 
 @app.post("/merge-files")
 async def merge_files(file_one: UploadFile = File(...), file_two: UploadFile = File(...), file_three: UploadFile = File(...)):
     file_paths = []
     for file in [file_one, file_two, file_three]:
-        temp_file_path = f"/tmp/{file.filename}"
+        temp_file_path = f"tmp/{file.filename}"
+        # temp_file_path = Path(UPLOAD_DIR) / file.filename
         with open(temp_file_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
         file_paths.append(temp_file_path)

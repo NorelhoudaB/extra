@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  frontend:
+    build: . 
+    container_name: frontend
+    volumes:
+      - C:\Users\norel_2b285at\Downloads\extra\frontend:/code
+      - /code/node_modules
+    ports:
+      - "8911:8911"
+      - "3000:3000"
+
+    command: ["npm", "run", "dev"]  
+
+    restart: unless-stopped
+
+
+
