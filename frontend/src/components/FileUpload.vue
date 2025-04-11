@@ -187,14 +187,15 @@ const uploadFile = async () => {
 
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
-    
-    let filename = selectedFile.value.name;
 
-if (route.path === '/merge-files') {
-  filename = selectedFiles.value[1].name;
-} else if (route.path === '/convert-xhtml') {
-  filename = filename.replace(/\.(xhtml|html)$/i, '.html');
-}
+    let filename = selectedFile.value.name;
+    if (route.path === '/merge-files') {
+      filename = selectedFiles.value[1].name; }
+      else if (route.path === "/convert-xhtml") {
+        filename = filename.replace(/\.(xhtml|html)$/i, ".html");
+      }else{
+        filename = selectedFile.value.name;
+    }
 
 
     const link = document.createElement("a");
