@@ -333,9 +333,13 @@ def combine_files(file_one, file_two, file_three):
     result = chk_cls(style_dict, input_files)
     if result is not None:
         i, j = result
-        rename_batch_classes_in_file(input_files[i], f"modified_batch_{i}.html")
-        rename_a_classes_in_file(input_files[i], f"modified_A_{i}.html")
-        updated_file = f"modified_batch_{i}.html"
+        tmp_dir = Path(input_files[i]).parent
+        batch_file = tmp_dir / f"modified_batch_{i}.html"
+        a_file = tmp_dir / f"modified_A_{i}.html"
+
+        rename_batch_classes_in_file(input_files[i], batch_file)
+        rename_a_classes_in_file(input_files[i], a_file)
+        updated_file = str(batch_file)
         input_files[i] = updated_file
         style_dict, body_dict = extract_content(input_files)
 
@@ -370,13 +374,12 @@ def combine_files(file_one, file_two, file_three):
     return str(output_file)
 
 
-
 @app.post("/merge-files")
 async def merge_files(file_one: UploadFile = File(...), file_two: UploadFile = File(...), file_three: UploadFile = File(...)):
     file_paths = []
     for file in [file_one, file_two, file_three]:
-        temp_file_path = f"tmp/{file.filename}"
-        # temp_file_path = Path(UPLOAD_DIR) / file.filename
+       # temp_file_path = f"tmp/{file.filename}"
+        temp_file_path = Path(UPLOAD_DIR) / file.filename
         with open(temp_file_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
         file_paths.append(temp_file_path)
