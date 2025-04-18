@@ -14,11 +14,8 @@ services:
   #     - backend
 
   frontend:
-    build:
-      context: ./frontend
-    volumes:
-      - C:\Users\norel_2b285at\Downloads\extra\frontend:/code
-      - /code/node_modules
+    build: ./frontend
+   
     ports:
       - "8911:8911"
       - "3000:3000"
@@ -26,10 +23,8 @@ services:
       - backend
 
   backend:
-    build:
-      context: ./backend
-    volumes:
-      - C:\Users\norel_2b285at\Downloads\extra\backend:/code
+    build: ./backend
+    
     ports:
       - "8888:80"
       - "5677:5677"
