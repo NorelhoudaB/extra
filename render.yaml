@@ -1,14 +1,14 @@
 services:
   - type: web
     name: backend
-    env: docker
-    dockerfilePath: backend/Dockerfile
-    buildCommand: ""
-    startCommand: ""
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    buildCommand: docker build -t backend -f ./backend/Dockerfile .
+    startCommand: docker-compose up backend
 
   - type: web
     name: frontend
-    env: docker
-    dockerfilePath: frontend/Dockerfile
-    buildCommand: ""
-    startCommand: ""
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    buildCommand: docker build -t frontend -f ./frontend/Dockerfile .
+    startCommand: docker-compose up frontend
