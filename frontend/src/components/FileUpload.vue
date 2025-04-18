@@ -175,7 +175,7 @@ const uploadFile = async () => {
   }
 
   try {
-    const response = await fetch(`http://localhost:8998${route.path}`, {
+    const response = await fetch(`http://localhost:8888${route.path}`, {
       method: "POST",
       body: formData
     });
@@ -187,15 +187,32 @@ const uploadFile = async () => {
 
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
+    let filename = '';
 
-    let filename = selectedFile.value.name;
-    if (route.path === '/merge-files') {
-      filename = selectedFiles.value[1].name; }
-      else if (route.path === "/convert-xhtml") {
-        filename = filename.replace(/\.(xhtml|html)$/i, ".html");
-      }else{
-        filename = selectedFile.value.name;
-    }
+if (route.path === '/merge-files') {
+  if (selectedFiles.value[1]) {
+    filename = selectedFiles.value[1].name;
+  } else {
+    fileError.value = "Le deuxième fichier est requis pour le nom de sortie.";
+    return;
+  }
+} else if (route.path === "/convert-xhtml") {
+  if (selectedFile.value) {
+    filename = selectedFile.value.name.replace(/\.(xhtml|html)$/i, ".html");
+  } else {
+    fileError.value = "Aucun fichier sélectionné.";
+    return;
+  }
+} else {
+  if (selectedFile.value) {
+    filename = selectedFile.value.name;
+  } else {
+    fileError.value = "Aucun fichier sélectionné.";
+    return;
+  }
+}
+
+
 
 
     const link = document.createElement("a");

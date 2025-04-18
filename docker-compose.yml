@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # nginx:
+  #   image: nginx:alpine
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf
+  #     - ./certs:/etc/ssl/certs 
+  #   depends_on:
+  #     - frontend
+  #     - backend
+
+  frontend:
+    build:
+      context: ./frontend
+    volumes:
+      - C:\Users\norel_2b285at\Downloads\extra\frontend:/code
+      - /code/node_modules
+    ports:
+      - "8911:8911"
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+    volumes:
+      - C:\Users\norel_2b285at\Downloads\extra\backend:/code
+    ports:
+      - "8888:80"
+      - "5677:5677"

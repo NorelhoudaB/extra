@@ -1,18 +1,15 @@
 import os
+import re
+import io
 import shutil
 import logging
-from fastapi import FastAPI, UploadFile, HTTPException, File,Response
+from pathlib import Path
+from fastapi import FastAPI, UploadFile, HTTPException, File
 from fastapi.responses import FileResponse, StreamingResponse
-import io
 from fastapi.middleware.cors import CORSMiddleware
-from pathlib import Path
-import REMOVE_MERGE_FONTFACE as RMF
-from lxml import etree
-import re
-import re
 from bs4 import BeautifulSoup
-from pathlib import Path
-
+from lxml import etree
+import REMOVE_MERGE_FONTFACE as RMF
 
 app = FastAPI()
 
@@ -24,224 +21,105 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOAD_DIR = "tmp"
+UPLOAD_DIR = Path("tmp")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @app.get("/hello")
 async def hello():
-    return "heyy !!!!"
+    return "Hello !!!"
 
 @app.post("/reduire")
 async def optimise_images(file: UploadFile = File(...), del_jpeg: int = 0):
     try:
-        print(f"Starting image optimization: {file.filename}")
         file_path_html = Path(UPLOAD_DIR) / file.filename
         file_content = await file.read()
-
         if not file_content:
-            print("The file is empty or corrupted")
             raise HTTPException(status_code=400, detail="Erreur : Le fichier est vide ou corrompu")
-
-        print(f"Saving uploaded file: {file_path_html}")
         with file_path_html.open("wb") as f:
             f.write(file_content)
-
         output_file_path = RMF.process_images(file_path_html, del_jpeg)
-
         if not output_file_path or not output_file_path.exists():
-            print("Processed file not found")
             raise HTTPException(status_code=500, detail="Erreur : Le fichier traité est introuvable")
-
-        print(f"Optimized file saved: {output_file_path}")
         return FileResponse(output_file_path, filename=output_file_path.name, media_type="text/html")
-
     except Exception as e:
-        print(f"Error optimizing file {file.filename}: {e}")
         raise HTTPException(status_code=500, detail=f"Erreur : {str(e)}")
 
 @app.post("/fix-alt")
 async def fix_alt(file: UploadFile = File(...)):
-    print(f"Received file: {file.filename}")
     file_path = os.path.join(UPLOAD_DIR, file.filename)
-    processed_file_path = os.path.join(UPLOAD_DIR, file.filename)
-
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    print(f"File saved: {file_path}")
-
     with open(file_path, "r", encoding="utf-8") as f:
         html_content = f.read()
-
     img_pattern = re.compile(r'(<img\s+[^>]*?src="[^"]+")(?!\s+alt="image"\s)', re.IGNORECASE)
-    count = 0
-
     def add_alt(match):
-        nonlocal count
-        count += 1
         return f'{match.group(1)} alt="image"'
-
     updated_content = img_pattern.sub(add_alt, html_content)
-    print(f"Number of alt attributes added: {count}")
-
-    with open(processed_file_path, "w", encoding="utf-8") as f:
+    with open(file_path, "w", encoding="utf-8") as f:
         f.write(updated_content)
-    print(f"Updated file saved: {processed_file_path}")
-
-    return FileResponse(processed_file_path, filename=file.filename, media_type="text/html")
-
+    return FileResponse(file_path, filename=file.filename, media_type="text/html")
 
 @app.post("/convert-xhtml")
 async def convert_xhtml(file: UploadFile = File(...)):
-    print(f"Received XHTML file: {file.filename}")
-    
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
-
     base_name = os.path.splitext(file.filename)[0]
     xhtml_path = os.path.join(UPLOAD_DIR, file.filename)
     html_path = os.path.join(UPLOAD_DIR, f"{base_name}.html")
-
     with open(xhtml_path, "wb") as f:
         f.write(await file.read())
-    print(f"Saved XHTML file: {xhtml_path}")
-
-    def xhtml_to_html(xhtml_file, html_file):
-        parser = etree.XMLParser(recover=True)
-        tree = etree.parse(xhtml_file, parser)
-
-        for elem in tree.xpath('//@*'):
-            if elem is None:
-                elem.getparent().remove(elem)
-
-        html_content = etree.tostring(tree, method="html", encoding="unicode")
-
-        with open(html_file, "w", encoding="utf-8") as f:
-            f.write(html_content)
-
-    xhtml_to_html(xhtml_path, html_path)
-    print(f"Converted HTML file saved: {html_path}")
-
-   
+    parser = etree.XMLParser(recover=True)
+    tree = etree.parse(xhtml_path, parser)
+    html_content = etree.tostring(tree, method="html", encoding="unicode")
+    with open(html_path, "w", encoding="utf-8") as f:
+        f.write(html_content)
     return FileResponse(html_path, filename=f"{base_name}.html", media_type="text/html")
-
-# @app.post("/change-thead")
-# async def change_thead(file: UploadFile):
-#     print(f"Received file: {file.filename}")
-#     if not file.filename.endswith(('.html', '.xhtml')):
-#         print("Invalid file type")
-#         raise HTTPException(400, "Invalid file type. Please upload an HTML or XHTML file.")
-
-#     file_path = os.path.join(UPLOAD_DIR, file.filename)
-#     processed_filename = file.filename.replace(".xhtml", ".xhtml").replace(".html", ".html")
-#     processed_path = os.path.join(UPLOAD_DIR, processed_filename)
-
-#     content = (await file.read()).decode('utf-8')
-
-#     def replace_thead_if_no_tbody(table_content):
-#         if re.search(r'<thead\b', table_content) and not re.search(r'<tbody\b', table_content):
-#             return re.sub(r'</?thead\b', lambda x: x.group().replace('thead', 'tbody'), table_content)
-#         return table_content
-
-#     updated_content = re.sub(
-#         r'<table[^>]*>.*?</table>',
-#         lambda m: replace_thead_if_no_tbody(m.group()),
-#         content,
-#         flags=re.DOTALL
-#     )
-
-#     with open(processed_path, "w", encoding="utf-8") as f:
-#         f.write(updated_content)
-
-#     print(f"Processed file saved: {processed_path}")
-
-#     return FileResponse(processed_path, filename=processed_filename, media_type="text/html")
 
 @app.post("/fix-space")
 async def fix_space(file: UploadFile = File(...)):
-    print(f"Received file: {file.filename}")
     if not file.filename.endswith(('.html', '.xhtml')):
-        print("Invalid file type")
         raise HTTPException(400, "Invalid file type. Please upload an HTML or XHTML file.")
-
     file_path = os.path.join(UPLOAD_DIR, file.filename)
-    processed_filename = file.filename.replace(".xhtml", ".xhtml").replace(".html", ".html")
-    processed_path = os.path.join(UPLOAD_DIR, processed_filename)
-
-    print(f"Saving uploaded file to {file_path}")
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
-
-    print("Replacing &#xa0; with spaces")
     content = content.replace("&#xa0;", " ")
-
-    with open(processed_path, "w", encoding="utf-8") as f:
+    with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
+    return FileResponse(file_path, filename=file.filename, media_type="text/html")
 
-    print(f"Processed file saved to {processed_path}")
-
-    return FileResponse(processed_path, filename=processed_filename, media_type="text/html")
- 
 @app.post("/fix-table")
 async def fix_table_endpoint(file: UploadFile = File(...)):
-    try:
-        contents = await file.read()
-        html = contents.decode("utf-8")
-    except Exception:
-        raise HTTPException(status_code=400, detail="Erreur lors de la lecture du fichier.")
-   
+    html = (await file.read()).decode("utf-8")
     updated_content = fix_table_html(html)
- 
     corrected_file_path = os.path.join(UPLOAD_DIR, f"corrected_{file.filename}")
     with open(corrected_file_path, "w", encoding="utf-8") as f:
         f.write(updated_content)
- 
     return FileResponse(corrected_file_path, filename=f"corrected_{file.filename}", media_type="text/html")
 
 def fix_table_html(html: str) -> str:
-    """
-    Corrige la structure des balises <table> dans le HTML/XHTML :
-      - Supprime les tables vides (contenant uniquement espaces et retours à la ligne).
-      - Si la table ne contient pas de <tbody>, remplace <thead> et <tfoot> par <tbody>.
-      - Si la table contient déjà un <tbody> (même avec <thead> et/ou <tfoot>), on ne modifie rien.
-    """
-    # 1. Supprimer les tables vides : <table ...> ne contenant que des espaces ou retours à la ligne
     html = re.sub(r'<table\b[^>]*>\s*</table>', '', html, flags=re.IGNORECASE)
- 
-    # 2. Pour chaque bloc <table>...</table> traité avec un callback
     def process_table(match):
         table_html = match.group(0)
-        # Si la table contient déjà un <tbody>, on ne fait rien
         if re.search(r'<tbody\b', table_html, flags=re.IGNORECASE):
             return table_html
-        # Sinon, on remplace les balises <thead> et <tfoot> par <tbody>
-        # Remplacement pour les balises ouvrantes et fermantes
-        table_html = re.sub(r'<(/?)(thead|tfoot)\b', r'<\1tbody', table_html, flags=re.IGNORECASE)
-        return table_html
- 
-    # On parcourt chaque table complète en utilisant DOTALL pour inclure les retours à la ligne
-    html = re.sub(r'(<table\b.*?</table>)', process_table, html, flags=re.IGNORECASE | re.DOTALL)
-   
-    return html
-
+        return re.sub(r'<(/?)(thead|tfoot)\b', r'<\1tbody', table_html, flags=re.IGNORECASE)
+    return re.sub(r'(<table\b.*?</table>)', process_table, html, flags=re.IGNORECASE | re.DOTALL)
 
 @app.post("/fix_id")
 async def fix_id(file: UploadFile = File(...)):
     content = await file.read()
     html_content = content.decode("utf-8")
-    
     pattern = r'(<div\b[^>]*?)\s+id\s*=\s*(["\'])\s*\2([^>]*?>)'
     html_content = re.sub(pattern, r'\1 \3', html_content, flags=re.IGNORECASE)
     html_content = re.sub(r'<div\s+>', '<div>', html_content)
-    
     corrected_file = io.BytesIO(html_content.encode("utf-8"))
     return StreamingResponse(corrected_file, media_type="text/html", headers={
         "Content-Disposition": f'attachment; filename="corrected_{file.filename}"'
     })
-
+    
+    
 #____________________________________________the merging files zone ____________________________________
-
+ 
 def extract_content(file_paths):
     style_dict = {}
     body_dict = {}
@@ -314,62 +192,57 @@ def rename_a_classes_in_file(input_file, output_file):
     
     with open(output_file, 'w', encoding='utf-8') as file:
         file.write(updated_html)
-
-def sanitize_html_attributes(html_str):
-    soup = BeautifulSoup(html_str, 'lxml')
-    for tag in soup.find_all(True):
-        for attr, value in tag.attrs.items():
-            if isinstance(value, str):
-                value = value.replace('"', '&quot;')
-                tag[attr] = value
-            elif isinstance(value, list):
-                tag[attr] = [v.replace('"', '&quot;') for v in value]
-    return soup.body.decode_contents() if soup.body else str(soup)
+def style_type(content: str) -> str:
+    return content.replace('<style>', '<style type="text/css">')
 
 def combine_files(file_one, file_two, file_three):
     input_files = [file_one, file_two, file_three]
+    original_stems = [Path(p).stem for p in input_files]
+
     style_dict, body_dict = extract_content(input_files)
-
     result = chk_cls(style_dict, input_files)
-    if result is not None:
-        i, j = result
-        tmp_dir = Path(input_files[i]).parent
-        batch_file = tmp_dir / f"modified_batch_{i}.html"
-        a_file = tmp_dir / f"modified_A_{i}.html"
 
-        rename_batch_classes_in_file(input_files[i], batch_file)
-        rename_a_classes_in_file(input_files[i], a_file)
-        updated_file = str(batch_file)
-        input_files[i] = updated_file
+    if result is not None:
+        i, _ = result
+        renamed_batch = UPLOAD_DIR / f"modified_batch_{i}.html"
+        renamed_a = UPLOAD_DIR / f"modified_a_{i}.html"
+
+        rename_batch_classes_in_file(input_files[i], renamed_batch)
+        rename_a_classes_in_file(renamed_batch, renamed_a)
+
+        input_files[i] = renamed_a
         style_dict, body_dict = extract_content(input_files)
 
-    styles_combined = '\n'.join([style_dict[Path(path).stem] for path in input_files])
-    body_1_3_raw = ''.join([body_dict[Path(path).stem] for idx, path in enumerate(input_files) if idx != 1])
-    merged_body = sanitize_html_attributes(body_1_3_raw)
+    file_one_body = body_dict[Path(input_files[0]).stem]
+    file_three_body = body_dict[Path(input_files[2]).stem]
+    all_styles = '\n'.join([style_dict[Path(p).stem] for p in input_files if Path(p).stem in style_dict])
 
-    with open(file_two, 'r', encoding='utf-8') as f:
+    with open(input_files[1], 'r', encoding='utf-8') as f:
         content_two = f.read()
 
-    head_style_pattern = re.compile(r'(<style[^>]*>)(.*?)(</style>)', re.DOTALL)
-    if '<style' in content_two:
-        content_two = head_style_pattern.sub(rf'\1{styles_combined}\3', content_two)
-    else:
-        content_two = content_two.replace('</head>', f'<style>{styles_combined}</style>\n</head>')
-
-    body_start = content_two.find('<body')
-    if body_start == -1:
-        raise ValueError("No <body> tag found in the base file.")
+    body_start = content_two.lower().find('<body')
     body_open_end = content_two.find('>', body_start)
     first_div_close = content_two.find('</div>', body_open_end)
-    if first_div_close == -1:
-        raise ValueError("No </div> found inside <body> of the base file.")
+    insert_after_div = first_div_close + len('</div>')
+    insert_before_body_end = content_two.lower().rfind('</body>')
 
-    insert_index = first_div_close + len('</div>')
-    final_output = content_two[:insert_index] + merged_body + content_two[insert_index:]
+    new_content = (
+        content_two[:insert_after_div] +
+        file_one_body +
+        content_two[insert_after_div:insert_before_body_end] +
+        file_three_body +
+        content_two[insert_before_body_end:]
+    )
 
-    output_file = Path(file_two).parent / "merged_output.xhtml"
+    head_end = new_content.lower().find('</head>')
+    if head_end != -1:
+        style_tag = f'<style>\n{all_styles}\n</style>\n'
+        new_content = new_content[:head_end] + style_tag + new_content[head_end:]
+        
+    new_content = style_type(new_content)
+    output_file = Path(input_files[1]).parent / "merged_output.xhtml"
     with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(final_output)
+        f.write(new_content)
 
     return str(output_file)
 
@@ -378,7 +251,6 @@ def combine_files(file_one, file_two, file_three):
 async def merge_files(file_one: UploadFile = File(...), file_two: UploadFile = File(...), file_three: UploadFile = File(...)):
     file_paths = []
     for file in [file_one, file_two, file_three]:
-       # temp_file_path = f"tmp/{file.filename}"
         temp_file_path = Path(UPLOAD_DIR) / file.filename
         with open(temp_file_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
