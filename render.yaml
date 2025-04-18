@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: backend
+    env: docker
+    dockerfilePath: backend/Dockerfile
+    buildCommand: ""
+    startCommand: ""
+
+  - type: web
+    name: frontend
+    env: docker
+    dockerfilePath: frontend/Dockerfile
+    buildCommand: ""
+    startCommand: ""

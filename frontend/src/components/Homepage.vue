@@ -44,7 +44,7 @@ const navigateTo = (path: string) => {
   transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s;
   border-radius: 12px;
   background-color: white;
-  height: 200px; /* Increased height for better layout */
+  height: 200px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -61,14 +61,12 @@ const navigateTo = (path: string) => {
 }
 
 .card-title {
-  font-size: 1.3rem;
+  font-size: 21px;
   font-weight: bold;
   color: #366998;
 }
 
 .card-text {
-  font-size: 1rem;
+  font-size: 16px;
 }
-
-
 </style>

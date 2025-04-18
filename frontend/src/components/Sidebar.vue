@@ -107,10 +107,15 @@ const toggleSidebar = () => {
   transition: background 0.3s;
 }
 
-.nav-link:hover, .nav-link.active {
+.nav-link.active {
   background-color: #0ecfcf !important;
   color: #04183a !important;
 }
+.nav-link:hover {
+  background-color: rgba(247, 130, 94, 0.1) !important;
+  color: #04183a !important;
+}
+
 
 .nav-text {
   flex-grow: 1;
