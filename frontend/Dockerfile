@@ -15,4 +15,5 @@ ENV HOST=0.0.0.0
 
 EXPOSE 8911
 
-CMD ["serve", "-s", "dist", "-l", "tcp:$PORT"]
+
+CMD serve -s dist -l tcp:$PORT
