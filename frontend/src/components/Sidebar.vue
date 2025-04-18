@@ -112,7 +112,7 @@ const toggleSidebar = () => {
   color: #04183a !important;
 }
 .nav-link:hover {
-  background-color: rgba(247, 130, 94, 0.1) !important;
+  background-color:  #6fdada !important;
   color: #04183a !important;
 }
 
