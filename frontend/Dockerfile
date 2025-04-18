@@ -10,7 +10,6 @@ RUN npm install
 
 COPY . /code
  
-ENV PORT=8911
 ENV HOST=0.0.0.0
 
 EXPOSE 8911
