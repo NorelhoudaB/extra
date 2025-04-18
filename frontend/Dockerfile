@@ -16,4 +16,4 @@ ENV HOST=0.0.0.0
 EXPOSE 8911
 
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "build"]
