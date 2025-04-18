@@ -175,7 +175,7 @@ const uploadFile = async () => {
   }
 
   try {
-    const response = await fetch(`http://localhost:8888${route.path}`, {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${route.path}`, {
       method: "POST",
       body: formData
     });
