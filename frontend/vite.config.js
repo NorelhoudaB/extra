@@ -10,5 +10,7 @@ export default defineConfig({
     port: 8911, 
     allowedHosts: ['amelkis-extra.onrender.com']
     
+  },define: {
+    'process.env': {}
   }
 })
