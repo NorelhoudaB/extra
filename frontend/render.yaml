@@ -1,0 +1,16 @@
+# Exported from Render on 2025-04-18T14:41:44Z
+services:
+- type: web
+  name: Amelkis extra
+  runtime: node
+  repo: https://github.com/NorelhoudaB/extra
+  branch: testing-deploy
+  plan: free
+  envVars:
+  - key: NODE_ENV
+    sync: false
+  region: singapore
+  buildCommand: npm install && npm run build
+  startCommand: npm start
+  rootDir: frontend
+version: "1"
