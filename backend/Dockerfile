@@ -69,10 +69,10 @@ RUN pip install --no-cache-dir --upgrade -r requirements.txt
 COPY . /code
 
 # Expose port
-EXPOSE 80 8888
+EXPOSE 80 10000
 
 # Start FastAPI app
 # CMD ["fastapi", "run", "/code/main.py", "--port", "80"]
 # CMD ["uvicorn", "app.main:app", "--reload" , "--host", "0.0.0.0", "--port", "80"]
 # Start FastAPI app with debugpy
-CMD ["python3.9", "-m", "debugpy", "--listen", "0.0.0.0:8888", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--reload"]
+CMD ["python3.9", "-m", "--listen", "0.0.0.0:10000", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--reload"]
