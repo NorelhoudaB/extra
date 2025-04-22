@@ -26,7 +26,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @app.get("/hello")
 async def hello():
-    return "Hello !!!"
+    return "Hello !!"
 
 @app.post("/reduire")
 async def optimise_images(file: UploadFile = File(...), del_jpeg: int = 0):
