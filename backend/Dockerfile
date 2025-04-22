@@ -75,4 +75,4 @@ EXPOSE 80 10000
 # CMD ["fastapi", "run", "/code/main.py", "--port", "80"]
 # CMD ["uvicorn", "app.main:app", "--reload" , "--host", "0.0.0.0", "--port", "80"]
 # Start FastAPI app with debugpy
-CMD ["python3.9", "-m", "--listen", "0.0.0.0:10000", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--reload"]
+CMD ["python3.9", "-m", "0.0.0.0:10000", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--reload"]
