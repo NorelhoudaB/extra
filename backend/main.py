@@ -10,6 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from bs4 import BeautifulSoup
 from lxml import etree
 import REMOVE_MERGE_FONTFACE as RMF
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -46,18 +49,31 @@ async def optimise_images(file: UploadFile = File(...), del_jpeg: int = 0):
 
 @app.post("/fix-alt")
 async def fix_alt(file: UploadFile = File(...)):
+
     file_path = os.path.join(UPLOAD_DIR, file.filename)
+
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
+
     with open(file_path, "r", encoding="utf-8") as f:
         html_content = f.read()
+
     img_pattern = re.compile(r'(<img\s+[^>]*?src="[^"]+")(?!\s+alt="image"\s)', re.IGNORECASE)
+
+    detected = len(img_pattern.findall(html_content))
+
     def add_alt(match):
         return f'{match.group(1)} alt="image"'
+
     updated_content = img_pattern.sub(add_alt, html_content)
+
+    logger.info(f"[fix-alt] file={file.filename} detected={detected} changed={detected}")
+
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(updated_content)
-    return FileResponse(file_path, filename=file.filename, media_type="text/html")
+
+    return FileResponse( file_path,  filename=file.filename,  media_type="text/html"
+    )
 
 @app.post("/convert-xhtml")
 async def convert_xhtml(file: UploadFile = File(...)):
@@ -75,17 +91,23 @@ async def convert_xhtml(file: UploadFile = File(...)):
 
 @app.post("/fix-space")
 async def fix_space(file: UploadFile = File(...)):
+
     if not file.filename.endswith(('.html', '.xhtml')):
-        raise HTTPException(400, "Invalid file type. Please upload an HTML or XHTML file.")
+        raise HTTPException(400,"Invalid file type. Please upload an HTML or XHTML file."
+        )
     file_path = os.path.join(UPLOAD_DIR, file.filename)
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
+    detected = content.count("&#xa0;")
     content = content.replace("&#xa0;", " ")
+    logger.info(   f"[fix-space] file={file.filename} detected={detected} changed={detected}"  )
     with open(file_path, "w", encoding="utf-8") as f:
-        f.write(content)
-    return FileResponse(file_path, filename=file.filename, media_type="text/html")
+         f.write(content)
+
+    return FileResponse( file_path,  filename=file.filename,   media_type="text/html"
+    )
 
 @app.post("/fix-table")
 async def fix_table_endpoint(file: UploadFile = File(...)):
@@ -110,12 +132,16 @@ async def fix_id(file: UploadFile = File(...)):
     content = await file.read()
     html_content = content.decode("utf-8")
     pattern = r'(<div\b[^>]*?)\s+id\s*=\s*(["\'])\s*\2([^>]*?>)'
-    html_content = re.sub(pattern, r'\1 \3', html_content, flags=re.IGNORECASE)
-    html_content = re.sub(r'<div\s+>', '<div>', html_content)
-    corrected_file = io.BytesIO(html_content.encode("utf-8"))
-    return StreamingResponse(corrected_file, media_type="text/html", headers={
-        "Content-Disposition": f'attachment; filename="corrected_{file.filename}"'
-    })
+    detected = len(re.findall(      pattern,  html_content,  flags=re.IGNORECASE  ))
+
+    html_content = re.sub( pattern,  r'\1 \3',  html_content,  flags=re.IGNORECASE )
+    html_content = re.sub(  r'<div\s+>',  '<div>',  html_content  )
+    logger.info(f"[fix-id] file={file.filename} detected={detected} changed={detected}")
+    corrected_file = io.BytesIO(html_content.encode("utf-8") )
+
+    return StreamingResponse(corrected_file,   media_type="text/html",   headers={ "Content-Disposition":f'attachment; filename="corrected_{file.filename}"'
+        }
+    )
     
     
 #____________________________________________the merging files zone ____________________________________
