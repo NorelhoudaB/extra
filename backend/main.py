@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from bs4 import BeautifulSoup
 from lxml import etree
 import REMOVE_MERGE_FONTFACE as RMF
+from typing import Optional
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -145,7 +146,17 @@ async def fix_id(file: UploadFile = File(...)):
     
     
 #____________________________________________the merging files zone ____________________________________
- 
+#THIS IS A HELPER THAT CREATES EMPTY HTML 
+def create_empty_html(path: Path):
+    content = """<!DOCTYPE html>
+<html lang="en">
+<head>
+</head>
+<body>
+</body>
+</html>"""
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content)
 def extract_content(file_paths):
     style_dict = {}
     body_dict = {}
@@ -221,7 +232,13 @@ def rename_a_classes_in_file(input_file, output_file):
 def style_type(content: str) -> str:
     return content.replace('<style>', '<style type="text/css">')
 
-def combine_files(file_one, file_two, file_three):
+def combine_files(file_one, file_two, file_three=None):
+
+    if file_three is None:
+        empty_path = UPLOAD_DIR / "empty.html"
+        create_empty_html(empty_path)
+        file_three = empty_path
+
     input_files = [file_one, file_two, file_three]
     original_stems = [Path(p).stem for p in input_files]
 
@@ -241,7 +258,10 @@ def combine_files(file_one, file_two, file_three):
 
     file_one_body = body_dict[Path(input_files[0]).stem]
     file_three_body = body_dict[Path(input_files[2]).stem]
-    all_styles = '\n'.join([style_dict[Path(p).stem] for p in input_files if Path(p).stem in style_dict])
+
+    all_styles = '\n'.join(
+        [style_dict[Path(p).stem] for p in input_files if Path(p).stem in style_dict]
+    )
 
     with open(input_files[1], 'r', encoding='utf-8') as f:
         content_two = f.read()
@@ -253,44 +273,65 @@ def combine_files(file_one, file_two, file_three):
     insert_before_body_end = content_two.lower().rfind('</body>')
 
     new_content = (
-        content_two[:insert_after_div] +
-        file_one_body +
-        content_two[insert_after_div:insert_before_body_end] +
-        file_three_body +
-        content_two[insert_before_body_end:]
+        content_two[:insert_after_div]
+        + file_one_body
+        + content_two[insert_after_div:insert_before_body_end]
+        + file_three_body
+        + content_two[insert_before_body_end:]
     )
 
     head_end = new_content.lower().find('</head>')
+
     if head_end != -1:
         style_tag = f'<style>\n{all_styles}\n</style>\n'
         new_content = new_content[:head_end] + style_tag + new_content[head_end:]
-        
+
     new_content = style_type(new_content)
+
     output_file = Path(input_files[1]).parent / "merged_output.xhtml"
+
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(new_content)
 
     return str(output_file)
 
-
 @app.post("/merge-files")
-async def merge_files(file_one: UploadFile = File(...), file_two: UploadFile = File(...), file_three: UploadFile = File(...)):
+async def merge_files(
+    file_one: UploadFile = File(...),
+    file_two: UploadFile = File(...),
+    file_three: Optional[UploadFile] = File(None),
+):
+
     file_paths = []
+
     for file in [file_one, file_two, file_three]:
+
+        if file is None:
+            file_paths.append(None)
+            continue
+
         temp_file_path = Path(UPLOAD_DIR) / file.filename
+
         with open(temp_file_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
+
         file_paths.append(temp_file_path)
-    
-    merged_file_path = combine_files(file_paths[0], file_paths[1], file_paths[2])
-    
-    # Clean up temp files
+
+    merged_file_path = combine_files(
+        file_paths[0],
+        file_paths[1],
+        file_paths[2],
+    )
+
     for file_path in file_paths:
         try:
-            os.unlink(file_path)
+            if file_path:
+                os.unlink(file_path)
         except:
             pass
-            
+
     return FileResponse(
-        merged_file_path,   media_type="application/xhtml+xml",   filename="merged_output.xhtml"
+        merged_file_path,
+        media_type="application/xhtml+xml",
+        filename="merged_output.xhtml",
     )
