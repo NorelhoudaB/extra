@@ -1,7 +1,7 @@
 <template> 
     <div class="container text-center">
       <h1 class="display-4 mt-4">Bienvenue sur HTML Validator</h1>
-      <p class="lead">Cette application web vous permet de valider et de corriger les fichiers HTML.</p>
+      <p class="lead">Cette application web vous permet de valider et de corriger des fichiers HTML.</p>
       <p>Choisissez un outil ci-dessous pour commencer.</p>
 
       <div class="row justify-content-center mt-4">
