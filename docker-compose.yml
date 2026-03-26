@@ -1,25 +1,30 @@
 version: '3.8'
 
 services:
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-    depends_on:
-      - frontend
-      - backend
+  # nginx:
+  #   image: nginx:alpine
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf
+  #     - ./certs:/etc/ssl/certs 
+  #   depends_on:
+  #     - frontend
+  #     - backend
 
   frontend:
     build: ./frontend
-    expose:
-      - "8911"
+   
+    ports:
+      - "8911:8911"
+      - "3000:3000"
     depends_on:
       - backend
 
   backend:
     build: ./backend
-    expose:
-      - "80"
-      - "5677"
+    
+    ports:
+      - "8888:80"
+      - "5677:5677"
