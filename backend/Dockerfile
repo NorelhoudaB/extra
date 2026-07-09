@@ -41,7 +41,7 @@ RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update && apt-get install -
     python3.9 \
     python3.9-distutils \
     python3.9-venv \
-    && wget https://bootstrap.pypa.io/get-pip.py \
+    && wget https://bootstrap.pypa.io/pip/3.9/get-pip.py \
     && python3.9 get-pip.py \
     && rm get-pip.py
 
